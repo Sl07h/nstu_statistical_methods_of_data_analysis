@@ -11,12 +11,8 @@ from sys import argv, path
 #-------------------------------------------------------------------------------
 class lab1():
     def __init__(self):
-        self.x = np.ndarray((n, 2))
-        self.x1 = np.random.uniform(low=a, high=b, size=n)
-        self.x2 = np.random.uniform(low=a, high=b, size=n)
+        self.x = sample_x()
         self.u = np.ndarray(n)
-        for i in range(n):
-            self.x[i] = [self.x1[i], self.x2[i]]
         for i in range(n):
             self.u[i] = f(theta_true, self.x[i])
         u_mean = np.full((n), np.mean(self.u))
@@ -28,12 +24,16 @@ class lab1():
 
     def save_table_1(self):
         with open('1/report/table_1_u_y_' + str(int(rho*100)) + '.txt', 'w') as file:
-            file.write('i\tx1\tx2\tu\ty\n')
+            file.write('i\t')
+            for i in range(1, m+1):
+                file.write('x%d\t' % i)
+            file.write('u\ty\n')
             for i in range(n):
-                x1 = self.x1[i]
-                x2 = self.x2[i]
-                file.write('{:d}\t{:.17f}\t{:.17f}\t{:.17f}\t{:.17f}\n'.format(
-                    i, x1, x2, self.u[i], self.y[i]))
+                file.write('{:d}\t'.format(i))
+                for j in range(m):
+                    file.write('{:.17f}\t'.format(self.x[i][j]))
+
+                file.write('{:.17f}\t{:.17f}\n'.format(self.u[i], self.y[i]))
 
     def draw(self, doDrawWithNoize, title, name, elevation, azimuth):
         path_to_save = '1/pics/' + name + '_' + \
@@ -64,19 +64,28 @@ class lab1():
 #-------------------------------------------------------------------------------
 if __name__ == "__main__":
     path.insert(1, '')
-    if int(argv[2]) == 3:
-        from model_3parameters import *
-    else:
-        from model_4parameters import *
     global rho
     rho = float(argv[1])
-    print('\n\nЗапушен код 1 лабораторной работы: {:d} параметров, шум {:d}%'.format(int(argv[2]), int(rho*100)))
+
+    params_count = int(argv[2])
+    if params_count == 3:
+        from model_3parameters import *
+    elif params_count == 4:
+        from model_4parameters import *
+    elif params_count == 6:
+        from model_6parameters import *
+
+    doDraw = bool(argv[3])
+
+    print('Запушен код 1 лабораторной работы: {:d} параметров, шум {:d}%'.format(int(argv[2]), int(rho*100)))
 
     l1 = lab1()
     l1.save_table_1()
-    l1.draw(False, 'исходная модель', 'before', None, None)
-    l1.draw(False, 'исходная модель', 'before', 0, 0)
-    l1.draw(False, 'исходная модель', 'before', 0, 90)
-    l1.draw(True, 'помеха', 'after', None, None)
-    l1.draw(True, 'помеха', 'after', 0, 0)
-    l1.draw(True, 'помеха', 'after', 0, 90)
+    doDraw = False
+    if doDraw:
+        l1.draw(False, 'исходная модель', 'before', None, None)
+        l1.draw(False, 'исходная модель', 'before', 0, 0)
+        l1.draw(False, 'исходная модель', 'before', 0, 90)
+        l1.draw(True, 'помеха', 'after', None, None)
+        l1.draw(True, 'помеха', 'after', 0, 0)
+        l1.draw(True, 'помеха', 'after', 0, 90)

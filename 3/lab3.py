@@ -124,9 +124,9 @@ class lab3():
             upper[i] = fx + self.t * sigma
 
         plt.title('оценка M(x1), помеха ' + str(int(rho * 100)) + '%')
-        plt.plot(lower)
-        plt.plot(center)
-        plt.plot(upper)
+        plt.plot(x1_list, lower)
+        plt.plot(x1_list, center)
+        plt.plot(x1_list, upper)
         plt.savefig(path_to_save)
         plt.clf()
 
@@ -150,10 +150,11 @@ class lab3():
             center[i] = fx
             upper[i] = fx + self.t * sigma
 
+
         plt.title('оценка M(x2), помеха ' + str(int(rho * 100)) + '%')
-        plt.plot(lower)
-        plt.plot(center)
-        plt.plot(upper)
+        plt.plot(x2_list, lower)
+        plt.plot(x2_list, center)
+        plt.plot(x2_list, upper)
         plt.savefig(path_to_save)
         plt.clf()
 
