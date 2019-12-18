@@ -4,11 +4,29 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy import stats
 from sympy import *
 from sys import argv, path
+import math
 
 
+def dotproduct(v1, v2):
+    return sum((a*b) for a, b in zip(v1, v2))
+
+
+def length(v):
+    return math.sqrt(abs(dotproduct(v, v)))
+
+
+def angle2(v1, v2):
+    return math.acos(abs(dotproduct(v1, v2)) / (length(v1) * length(v2)))
+
+
+def angle(v1, v2):
+    return np.dot(a, b) / (np.linalg.norm(a)*np.linalg.norm(b))
+
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
+
+
 class lab5():
     def __init__(self):
         self.x = np.ndarray((n, m))
@@ -34,6 +52,15 @@ class lab5():
         d = np.linalg.det(self.inf_matr)
         print('det = ', d)
 
+    # def calc_det_of_inf_matrix(self):
+    #     X = Matrix(self.X)
+    #     self.inf_matr_sp = X.T * X
+    #     self.inf_matr_sp = self.inf_matr_sp / Trace(self.inf_matr_sp)
+    #     print(self.inf_matr_sp)
+    #     self.inf_matr = np.array(self.inf_matr_sp).astype(np.float64)
+    #     d = np.linalg.det(self.inf_matr)
+    #     print('det = ', d)
+
     def calc_min_eig_val(self):
         self.eig_vals = np.linalg.eigvals(self.inf_matr)
         print('lambda_min = ', np.min(self.eig_vals))
@@ -42,54 +69,75 @@ class lab5():
         self.cond_number = np.max(self.eig_vals) / np.min(self.eig_vals)
         print('cond_number = ', self.cond_number)
 
-    def calc_max_sopr(self):
+    def calc_pair_sopr(self):
         X = self.X.transpose()
         self.R = np.ndarray((m, m))
-        self.max_sopr = -9000
+        self.pair_sopr = -9000.0
         for i in range(m):
             for j in range(m):
-                self.R[i][j] = 0
+                self.R[i][j] = 0.0
                 for t in range(n):
                     numerator = X[i][t] * X[j][t]
-                    denominator1 = 0
+                    denominator1 = 0.0
                     for t1 in range(n):
                         denominator1 += X[i][t1]**2
-                    denominator2 = 0
+                    denominator2 = 0.0
                     for t2 in range(n):
                         denominator2 += X[i][t2]**2
                 self.R[i][j] += numerator / np.sqrt(denominator1*denominator2)
-            self.R[i][i] = 1
+            self.R[i][i] = 1.0
+
+        #print(max(abs(self.R.max()), abs(self.R.min())))
 
         for i in range(m):
             for j in range(m):
-                if i!=j and abs(self.R[i][j]) > self.max_sopr:
-                    self.max_sopr = abs(self.R[i][j])
+                if i != j and (abs(self.R[i][j]) > self.pair_sopr):
+                    self.pair_sopr = abs(self.R[i][j])
 
-        #print(self.R)
-        print('max_sopr = %d' % self.max_sopr)
+        # print(self.R)
+        print('pair_sopr = %f' % self.pair_sopr)
 
-    def calc_pair_sopr(self):
+    # def calc_pair_sopr(self):
+    #     X = self.x.transpose()
+    #     # print(X)
+    #     self.R = np.ndarray((m, m))
+    #     self.pair_sopr = -9000
+    #     for i in range(m):
+    #         for j in range(m):
+    #             self.R[i][j] = angle(X[i], X[j])
+    #         self.R[i][i] = 1.0
+
+    #     for i in range(m):
+    #         for j in range(m):
+    #             if i != j and abs(self.R[i][j]) > self.pair_sopr:
+    #                 self.pair_sopr = abs(self.R[i][j])
+
+    #     # print(self.R)
+    #     print('pair_sopr = %d' % self.pair_sopr)
+
+    def calc_max_sopr(self):
         # R_inv = Matrix(self.R)**-1
         R_inv = np.linalg.inv(self.R)
         self.R_list = np.ndarray(m)
         # print(R_inv)
-        self.pair_sopr = -9000
+        self.max_sopr = -9000.0
         for i in range(m):
-            R_i = (1.0 - 1.0 / R_inv[i][i]) ** (1/2)
-            # print(R_i)
-            if R_i > self.pair_sopr and R_i != float('inf'):
-                self.pair_sopr = R_i
-        print('pair_sopr = %d' % self.pair_sopr)
+            R_i = sqrt(1.0 - (1.0 / R_inv[i][i]))
+            if R_i > self.max_sopr and R_i != float('inf'):
+                self.max_sopr = R_i
+        #print(max(abs(self.R.max()), abs(self.R.min())))
+
+        print('max_sopr = %f' % self.max_sopr)
 
     def calc_theta_ridge(self):
         X = Matrix(self.X)
         y = Matrix(self.y)
         _theta_true = Matrix(theta_true)
-        points = 26
+        points = 11
         RSS = np.ndarray(points)
         theta_norm = np.ndarray(points)
         theta_calc_ridge = np.ndarray((points, m))
-        lambda_params = np.linspace(0, 25, points)
+        lambda_params = np.linspace(2, 5, points)
         i = 0
         for lambda_param in lambda_params:
             lambdas = Matrix(np.diag(np.full(m, lambda_param)))
@@ -115,7 +163,19 @@ class lab5():
         plt.clf()
 
     def calc_theta_main_components(self):
-        pass
+        X = self.X.T
+        for i in range(m):
+            X[i] -= np.mean(X[i])
+        X_centered = Matrix(X.T)
+        X_inf_matr_centered = X_centered.T * X_centered
+        X_centered_np = np.array(X_inf_matr_centered).astype(np.float64)
+
+        V = Matrix(np.diag(np.linalg.eigvals(X_centered_np)))
+        y = Matrix(self.y)
+        Z = X_centered * V
+        b = ((Z.T*Z) ** -1) * Z.T * y
+        self.theta_calc_mc = V.dot(b)
+        print(self.theta_calc_mc)
 
 
 # -------------------------------------------------------------------------------
@@ -133,7 +193,7 @@ if __name__ == "__main__":
     l5.calc_det_of_inf_matrix()
     l5.calc_min_eig_val()
     l5.calc_cond_number()
-    l5.calc_max_sopr()
     l5.calc_pair_sopr()
+    l5.calc_max_sopr()
     l5.calc_theta_ridge()
     l5.calc_theta_main_components()
